@@ -75,7 +75,7 @@ describe('postTokenToServer', () => {
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(authResult),
+        body: JSON.stringify({ token: authResult.token, provider: authResult.provider }),
       }),
     );
   });

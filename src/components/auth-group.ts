@@ -31,7 +31,9 @@ export class AuthGroup extends HTMLElement {
 
   // C2: Use DOM API instead of innerHTML string interpolation to prevent XSS
   private render() {
-    const gap = this.getAttribute('gap') || '8px';
+    // F2: Sanitize gap attribute — only allow valid CSS length values
+    const rawGap = this.getAttribute('gap') || '8px';
+    const gap = /^\d+(\.\d+)?(px|rem|em|%|vh|vw)$/.test(rawGap) ? rawGap : '8px';
     const layout = this.getAttribute('layout') || 'vertical';
     const direction = layout === 'horizontal' ? 'row' : 'column';
 

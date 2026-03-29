@@ -22,6 +22,7 @@ export class AuthButton extends HTMLElement {
   ];
 
   private _loading = false;
+  private _clickHandler = () => this.handleClick();
 
   constructor() {
     super();
@@ -90,15 +91,21 @@ export class AuthButton extends HTMLElement {
       }));
 
       const serverUrl = this.getAttribute('server-url');
-      // C3: Enforce HTTPS for server URL
-      if (serverUrl && serverUrl.startsWith('https://')) {
+      // C3: Enforce HTTPS (allow localhost for development)
+      const isSecure = serverUrl && (
+        serverUrl.startsWith('https://') ||
+        serverUrl.startsWith('http://localhost') ||
+        serverUrl.startsWith('http://127.0.0.1')
+      );
+      if (serverUrl && isSecure) {
         const response = await postTokenToServer(serverUrl, result);
-        // H3: Safe JSON parsing — handle non-JSON responses
+        // F6: Clone response before reading body to avoid consumed stream error
+        const cloned = response.clone();
         let body: unknown;
         try {
           body = await response.json();
         } catch {
-          body = await response.text();
+          body = await cloned.text();
         }
         this.dispatchEvent(new CustomEvent('server-response', {
           detail: { response: body, status: response.status },
@@ -136,7 +143,8 @@ export class AuthButton extends HTMLElement {
     const labelEl = this.shadowRoot!.querySelector('.auth-btn__label');
     if (labelEl) labelEl.textContent = label;
 
-    this.shadowRoot!.querySelector('button')?.addEventListener('click', () => this.handleClick());
+    // F1: Use bound handler to avoid listener accumulation on re-render
+    this.shadowRoot!.querySelector('button')?.addEventListener('click', this._clickHandler);
   }
 }
 

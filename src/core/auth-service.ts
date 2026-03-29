@@ -30,6 +30,8 @@ function createProvider(provider: AuthProvider): FirebaseAuthProvider {
       return new GithubAuthProvider();
     case 'microsoft':
       return new OAuthProvider('microsoft.com');
+    default:
+      throw new Error(`Unsupported auth provider: "${provider}". Use "google", "github", or "microsoft".`);
   }
 }
 
@@ -59,9 +61,14 @@ export async function postTokenToServer(
   serverUrl: string,
   authResult: AuthResult,
 ): Promise<Response> {
+  // Send only token + provider by default — avoid leaking full user profile
+  const payload = {
+    token: authResult.token,
+    provider: authResult.provider,
+  };
   return fetch(serverUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(authResult),
+    body: JSON.stringify(payload),
   });
 }
